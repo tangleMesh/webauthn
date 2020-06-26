@@ -4,12 +4,13 @@ const { validateAndroidSafetyNetKey } = require('./authenticatorKey/parseAndroid
 const { validateFidoPackedKey } = require('./authenticatorKey/parseFidoPackedKey');
 const { validateFidoU2FKey } = require('./authenticatorKey/parseFidoU2FKey');
 const { validateLoginCredentials } = require('./validation');
+const base64url = require('base64url');
 
 exports.generateLoginChallenge = key => {
     const keys = [].concat(key); // convert key to array if its not
     const allowCredentials = keys.map(({ credID }) => ({
         type: 'public-key',
-        id: credID,
+        id: base64url.fromBase64 (credID),
         transports: ['usb', 'nfc', 'ble', 'internal'],
     }));
 
