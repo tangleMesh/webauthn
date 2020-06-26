@@ -1,5 +1,6 @@
 const { decodeAllSync } = require('cbor');
 const { createHash, createVerify, randomBytes } = require('crypto');
+const base64url = require('base64url');
 
 /**
  * U2F Presence constant
@@ -108,8 +109,7 @@ exports.verifySignature = (
 
 exports.randomBase64Buffer = (len = 32) => {
     const buff = randomBytes(len);
-
-    return buff.toString('base64');
+    return base64url (buff);
 };
 
 // parse base64 from the browser
