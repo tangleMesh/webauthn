@@ -10,7 +10,7 @@ exports.generateLoginChallenge = key => {
     const allowCredentials = keys.map(({ credID }) => ({
         type: 'public-key',
         id: credID,
-        transports: ['usb', 'nfc', 'ble'],
+        transports: ['usb', 'nfc', 'ble', 'internal'],
     }));
 
     return {
