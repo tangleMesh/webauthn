@@ -115,7 +115,7 @@ exports.randomBase64Buffer = (len = 32) => {
 // parse base64 from the browser
 exports.parseBrowserBufferString = (key_id) => {
     const buffer = Buffer.from(key_id, 'base64');
-    return buffer.toString('base64');
+    return base64url (buffer);
 };
 
 /**

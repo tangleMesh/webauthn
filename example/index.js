@@ -81,11 +81,6 @@ app.post('/login-challenge', (req, res) => {
     return res.send({ loggedIn });
 });
 
-const config = {
-    cert: fs.readFileSync(path.resolve(__dirname, '../tls/localhost.pem')),
-    key: fs.readFileSync(path.resolve(__dirname, '../tls/localhost-key.pem'))
-};
-
-spdy.createServer(config, app).listen(8000, () => {
+spdy.createServer({}, app).listen(8000, () => {
     console.log('Server is listening at https://localhost:8000. Ctrl^C to stop it.');
 });
