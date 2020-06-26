@@ -11,31 +11,10 @@ For a more thorough introduction see these two nice articles:
 ## Installation
 
 ```js
-npm install @webauthn/client
-npm install @webauthn/server
+npm install @tanglemesh/webauthn-server
 ```
 
 ## usage
-
-`Webauthn` is composed of two parts `@webauthn/client` and `@webauthn/server`
-
-### On the browser
-
-```js
-import { 
-    solveRegistrationChallenge,
-    solveLoginChallenge
-} from '@webauthn/client';
-```
-
-- `solveRegistrationChallenge`:
-    convert the challenge returned by the server on the register route into the response to be returned
-- `solveLoginChallenge`:
-    convert the challenge returned by the server on the login route into the response to be returned
-
-See an example in example/front
-
-### On the server
 
 ```js
 import {
@@ -58,16 +37,4 @@ import {
 - `verifyAuthenticatorAssertion`:
     Take the loginChallenge request body and the key stored with the user, and return true if it passes the authenticator assertion
 
-See an example in example/server
-
-
-## Roadmap
-
-For now only fido-u2f and packed format are implemented
-
-- Implement android-key format
-- Implement android-safetynet format
-- Implement tpm format
-
-
-
+See an example in [example](./example)

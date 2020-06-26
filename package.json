@@ -1,21 +1,21 @@
 {
-    "name": "root",
-    "version": "0.1.0",
-    "private": true,
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/wallix/webauthn.git"
-    },
-    "workspaces": [
-        "packages/*",
-        "example/*"
-    ],
-    "devDependencies": {
-        "lerna": "^3.14.1"
-    },
-    "resolutions": {
-        "https-proxy-agent": "^2.2.3",
-        "minimist": "^1.2.5",
-        "ecstatic": "^4.1.4"
-    }
+  "name": "@tanglemesh/webauthn-server",
+  "version": "0.2.0",
+  "main": "src/index.js",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tangleMesh/webauthn",
+    "directory": "packages/server"
+  },
+  "engines": {
+    "node": ">=10"
+  },
+  "dependencies": {
+    "cbor": "^5.0.1",
+    "jsrsasign": "^8.0.12"
+  },
+  "resolutions": {
+    "minimist": "^1.2.5"
+  }
 }
