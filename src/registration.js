@@ -81,10 +81,16 @@ exports.generateRegistrationChallenge = ({ relyingParty, user, authenticator = '
         },
         attestation,
         pubKeyCredParams: [
+            // Support FIDO2 devices, MACOSX, default
             {
                 type: 'public-key',
                 alg: -7 // "ES256" IANA COSE Algorithms registry
-            }
+            },
+            // Support Windows devices (Hello) 
+            {
+                type: 'public-key',
+                alg: -257 // "RS256"
+            },
         ],
         authenticatorSelection: {
             authenticatorAttachment: authenticator
