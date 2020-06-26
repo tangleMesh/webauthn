@@ -5,6 +5,7 @@ const {
     verifySignature,
     convertCOSEPublicKeyToRawPKCSECDHAKey,
 } = require('../utils');
+const base64url = require('base64url');
 
 exports.parseFidoU2FKey = (authenticatorKey, clientDataJSON) => {
     const authenticatorData = parseAttestationData(authenticatorKey.authData);
@@ -39,7 +40,7 @@ exports.parseFidoU2FKey = (authenticatorKey, clientDataJSON) => {
             fmt: 'fido-u2f',
             publicKey: publicKey.toString('base64'),
             counter: authenticatorData.counter,
-            credID: authenticatorData.credID.toString('base64'),
+            credID: base64url.fromBase64 (authenticatorData.credID.toString('base64')),
         };
     }
 

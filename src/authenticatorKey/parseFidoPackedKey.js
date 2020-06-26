@@ -3,6 +3,7 @@ const NodeRSA   = require('node-rsa');
 const elliptic  = require('elliptic');
 const { createVerify } = require('crypto');
 const cbor = require('cbor');
+const base64url = require('base64url');
 
 
 const {
@@ -120,7 +121,7 @@ exports.parseFidoPackedKey = (authenticatorKey, clientDataJSON) => {
         fmt: 'packed',
         publicKey: publicKey.toString('base64'),
         counter: authenticatorData.counter,
-        credID: authenticatorData.credID.toString('base64'),
+        credID: base64url.fromBase64 (authenticatorData.credID.toString('base64')),
     };
 };
 
