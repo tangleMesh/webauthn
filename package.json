@@ -1,6 +1,6 @@
 {
   "name": "@tanglemesh/webauthn-server",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "src/index.js",
   "license": "Apache-2.0",
   "repository": {
@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "cbor": "^5.0.1",
-    "jsrsasign": "^8.0.12"
+    "elliptic": "^6.5.3",
+    "jsrsasign": "^8.0.12",
+    "node-rsa": "^1.0.8"
   },
   "resolutions": {
     "minimist": "^1.2.5"

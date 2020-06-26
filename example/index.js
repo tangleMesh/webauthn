@@ -12,7 +12,7 @@ const {
     generateLoginChallenge,
     parseLoginRequest,
     verifyAuthenticatorAssertion,
-} = require('@webauthn/server');
+} = require('@tanglemesh/webauthn-server');
 
 const app = express();
 app.use(cors());

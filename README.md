@@ -6,7 +6,7 @@ Strong authentication is an authentication method using a physical key.
 For a more thorough introduction see these two nice articles:
 
 - [introduction](https://medium.com/@herrjemand/introduction-to-webauthn-api-5fd1fb46c285)
-- [verifying fido2 responses](https://medium.com/@herrjemand/verifying-fido2-responses-4691288c8770)
+- [verifying fido2 responses](https://medium.com/@herrjemand/verifying-fido2-packed-attestation-a067a9b2facd)
 
 ## Installation
 

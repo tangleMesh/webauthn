@@ -1,8 +1,13 @@
 const { X509 } = require('jsrsasign');
+const NodeRSA   = require('node-rsa');
+const elliptic  = require('elliptic');
 const { createVerify } = require('crypto');
+const cbor = require('cbor');
+
 
 const {
     hash,
+    pemToBase64,
     convertASN1toPEM,
     convertCOSEPublicKeyToRawPKCSECDHAKey,
 } = require('../utils');
@@ -100,7 +105,11 @@ exports.parseFidoPackedKey = (authenticatorKey, clientDataJSON) => {
     } else if (authenticatorKey.attStmt.ecdaaKeyId) {
         throw new Error('ECDAA is not supported yet!');
     } else {
-        throw new Error('Surrogate is not supported yet!');
+        publicKey = verifySurrogateAttestation(
+            authenticatorKey,
+            signatureBaseBuffer,
+            signatureBuffer
+        );
     }
 
     if (!publicKey) {
@@ -145,114 +154,120 @@ exports.validateFidoPackedKey = (
         .verify(publicKey, signatureBuffer);
 };
 
-// TODO: Understand and correctly implement this
-// const COSEKEYS = {
-//     kty: 1,
-//     alg: 3,
-//     crv: -1,
-//     x: -2,
-//     y: -3,
-//     n: -1,
-//     e: -2,
-// };
+let COSEKEYS = {
+    'kty' : 1,
+    'alg' : 3,
+    'crv' : -1,
+    'x'   : -2,
+    'y'   : -3,
+    'n'   : -1,
+    'e'   : -2
+}
 
-// const COSEKTY = {
-//     OKP: 1,
-//     EC2: 2,
-//     RSA: 3,
-// };
+let COSEKTY = {
+    'OKP': 1,
+    'EC2': 2,
+    'RSA': 3
+}
 
-// const COSERSASCHEME = {
-//     '-3': 'pss-sha256',
-//     '-39': 'pss-sha512',
-//     '-38': 'pss-sha384',
-//     '-65535': 'pkcs1-sha1',
-//     '-257': 'pkcs1-sha256',
-//     '-258': 'pkcs1-sha384',
-//     '-259': 'pkcs1-sha512',
-// };
+let COSERSASCHEME = {
+    '-3': 'pss-sha256',
+    '-39': 'pss-sha512',
+    '-38': 'pss-sha384',
+    '-65535': 'pkcs1-sha1',
+    '-257': 'pkcs1-sha256',
+    '-258': 'pkcs1-sha384',
+    '-259': 'pkcs1-sha512'
+}
 
-// const COSECRV = {
-//     '1': 'p256',
-//     '2': 'p384',
-//     '3': 'p521',
-// };
+var COSECRV = {
+    '1': 'p256',
+    '2': 'p384',
+    '3': 'p521'
+}
 
-// const COSEALGHASH = {
-//     '-257': 'sha256',
-//     '-258': 'sha384',
-//     '-259': 'sha512',
-//     '-65535': 'sha1',
-//     '-39': 'sha512',
-//     '-38': 'sha384',
-//     '-260': 'sha256',
-//     '-261': 'sha512',
-//     '-7': 'sha256',
-//     '-36': 'sha384',
-//     '-37': 'sha512',
-// };
-// function verifySurrogateAttestation(
-//     authenticatorData: {
-//         rpIdHash: any;
-//         flagsBuf: any;
-//         flags: {
-//             up: boolean;
-//             uv: boolean;
-//             at: boolean;
-//             ed: boolean;
-//             flagsInt: any;
-//         };
-//         counter: number;
-//         counterBuf: any;
-//         aaguid: any;
-//         credID: any;
-//         COSEPublicKey: any;
-//     },
-//     signatureBaseBuffer: Buffer,
-//     signatureBuffer: any
-// ) {
-//     const pubKeyCose = decodeAllSync(authenticatorData.COSEPublicKey)[0];
-//     const hashAlg = COSEALGHASH[pubKeyCose.get(COSEKEYS.alg)];
+var COSEALGHASH = {
+    '-257': 'sha256',
+    '-258': 'sha384',
+    '-259': 'sha512',
+    '-65535': 'sha1',
+    '-39': 'sha512',
+    '-38': 'sha384',
+    '-37': 'sha256',
+    '-260': 'sha256',
+    '-261': 'sha512',
+    '-7': 'sha256',
+    '-36': 'sha512'
+}
 
-//     if (pubKeyCose.get(COSEKEYS.kty) === COSEKTY.EC2) {
-//         const x = pubKeyCose.get(COSEKEYS.x);
-//         const y = pubKeyCose.get(COSEKEYS.y);
-//         const ansiKey = Buffer.from(Buffer.from([0x04]), x, y);
-//         const signatureBaseHash = hash(hashAlg, signatureBaseBuffer);
-//         const ec = new elliptic.ec(COSECRV[pubKeyCose.get(COSEKEYS.crv)]);
-//         const key = ec.keyFromPublic(ansiKey);
-//         return key.verify(signatureBaseHash, signatureBuffer);
-//     }
 
-//     if (pubKeyCose.get(COSEKEYS.kty) === COSEKTY.RSA) {
-//         const signingScheme = COSERSASCHEME[pubKeyCose.get(COSEKEYS.alg)];
-//         const key = new NodeRSA(undefined, { signingScheme });
-//         key.importKey(
-//             {
-//                 n: pubKeyCose.get(COSEKEYS.n),
-//                 e: 65537,
-//             },
-//             'components-public'
-//         );
-//         return key.verify(signatureBaseBuffer, signatureBuffer);
-//     }
 
-//     if (pubKeyCose.get(COSEKEYS.kty) === COSEKTY.OKP) {
-//         const x = pubKeyCose.get(COSEKEYS.x);
-//         const signatureBaseHash = hash(hashAlg, signatureBaseBuffer);
-//         const key = new elliptic.eddsa('ed25519');
-//         key.keyFromPublic(x);
-//         return key.verify(signatureBaseHash, signatureBuffer);
-//     }
+const verifySurrogateAttestation = (
+    authenticatorData,
+    signatureBaseBuffer,
+    signatureBuffer
+) => {
+    let authDataStruct = parseAttestationData(authenticatorData.authData);
+    let signatureIsValid = false;
+    let publicKey = null;
 
-//     throw new Error('Invalid COSE type!');
-// }
+    let pubKeyCose = cbor.decodeAllSync(authDataStruct.COSEPublicKey)[0];
+    let hashAlg    = COSEALGHASH[pubKeyCose.get(COSEKEYS.alg)];
+    if(pubKeyCose.get(COSEKEYS.kty) === COSEKTY.EC2) {
+        let x = pubKeyCose.get(COSEKEYS.x);
+        let y = pubKeyCose.get(COSEKEYS.y);
+        
+        let ansiKey = Buffer.concat([Buffer.from([0x04]), x, y]);
 
-function verifyFullAttestation(
+        let signatureBaseHash = hash(hashAlg, signatureBaseBuffer);
+
+        let ec  = new elliptic.ec(COSECRV[pubKeyCose.get(COSEKEYS.crv)]);
+        let key = ec.keyFromPublic(ansiKey);
+
+        signatureIsValid = key.verify(signatureBaseHash, signatureBuffer);
+        if (signatureIsValid) {
+            const hexKey = key.getPublic().encode('hex');
+            publicKey = Buffer.from(hexKey, 'hex').toString('base64');
+        }
+    } else if(pubKeyCose.get(COSEKEYS.kty) === COSEKTY.RSA) {
+        let signingScheme = COSERSASCHEME[pubKeyCose.get(COSEKEYS.alg)];
+
+        let key = new NodeRSA(undefined, { signingScheme });
+        key.importKey({
+            n: pubKeyCose.get(COSEKEYS.n),
+            e: 65537,
+        }, 'components-public');
+
+        signatureIsValid = key.verify(signatureBaseBuffer, signatureBuffer);
+        if (signatureIsValid) {
+            publicKey = pemToBase64(key.exportKey('pkcs8-public'));
+        }
+    } else if(pubKeyCose.get(COSEKEYS.kty) === COSEKTY.OKP) {
+        let x = pubKeyCose.get(COSEKEYS.x);
+        let signatureBaseHash = hash(hashAlg, signatureBaseBuffer);
+
+        let key = new elliptic.eddsa('ed25519');
+        key.keyFromPublic(x)
+
+        signatureIsValid = key.verify(signatureBaseHash, signatureBuffer);
+        if (signatureIsValid) {
+            const hexKey = key.getPublic().encode('hex');
+            publicKey = Buffer.from(hexKey, 'hex').toString('base64');
+        }
+    }
+
+    if(signatureIsValid) {
+        return publicKey;
+    }
+
+    return undefined;
+}
+
+const verifyFullAttestation = (
     authenticatorKey,
     signatureBaseBuffer,
     signatureBuffer
-) {
+) => {
     const authenticatorData = parseAttestationData(authenticatorKey.authData);
 
     const publicKey = convertCOSEPublicKeyToRawPKCSECDHAKey(
