@@ -51,7 +51,7 @@ exports.parseRegisterRequest = (body) => {
     };
 };
 
-exports.generateRegistrationChallenge = ({ relyingParty, user, authenticator = 'cross-platform', attestation = 'direct' } = {}) => {
+exports.generateRegistrationChallenge = ({ relyingParty, user, authenticator = 'platform', attestation = 'direct', userVerification = "preferred", timeout = 60000, } = {}) => {
     if (!relyingParty || !relyingParty.name || typeof relyingParty.name !== 'string') {
         throw new Error('The typeof relyingParty.name should be a string');
     }
@@ -61,11 +61,19 @@ exports.generateRegistrationChallenge = ({ relyingParty, user, authenticator = '
     }
 
     if (!(['cross-platform', 'platform'].includes(authenticator))) {
-        authenticator = 'cross-platform';
+        authenticator = 'platform';
     }
 
     if (!(['none', 'direct', 'indirect'].includes(attestation))) {
         attestation = 'direct';
+    }
+
+    if (!(["preferred", "required", "discouraged"].inncludes (userVerification))) {
+        userVerification = "preferred";
+    }
+
+    if (!Number.isInteger (timeout)) {
+        timeout = 60000;
     }
 
     return {
@@ -91,9 +99,24 @@ exports.generateRegistrationChallenge = ({ relyingParty, user, authenticator = '
                 type: 'public-key',
                 alg: -257 // "RS256"
             },
+            // Some other algorithms supposed by webauthn.io
+            {type: "public-key", alg: -35},
+            {type: "public-key", alg: -36},
+            {type: "public-key", alg: -258},
+            {type: "public-key", alg: -259},
+            {type: "public-key", alg: -37},
+            {type: "public-key", alg: -38},
+            {type: "public-key", alg: -39},
+            {type: "public-key", alg: -8},
         ],
         authenticatorSelection: {
-            authenticatorAttachment: authenticator
-        }
+            authenticatorAttachment: authenticator,
+            requireResidentKey: false,
+            userVerification,
+        },
+        extensions: {
+            txAuthSimple: "",
+        },
+        timeout,
     };
 };
