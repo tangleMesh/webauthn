@@ -51,7 +51,7 @@ exports.parseRegisterRequest = (body) => {
     };
 };
 
-exports.generateRegistrationChallenge = ({ relyingParty, user, authenticator = 'platform', attestation = 'direct', userVerification = "preferred", timeout = 60000, } = {}) => {
+exports.generateRegistrationChallenge = ({ relyingParty, user, authenticator = 'platform', attestation = 'direct', userVerification = 'preferred', timeout = 60000, } = {}) => {
     if (!relyingParty || !relyingParty.name || typeof relyingParty.name !== 'string') {
         throw new Error('The typeof relyingParty.name should be a string');
     }
@@ -68,8 +68,8 @@ exports.generateRegistrationChallenge = ({ relyingParty, user, authenticator = '
         attestation = 'direct';
     }
 
-    if (!(["preferred", "required", "discouraged"].inncludes (userVerification))) {
-        userVerification = "preferred";
+    if (!(['preferred', 'required', 'discouraged'].includes(userVerification))) {
+        userVerification = 'preferred';
     }
 
     if (!Number.isInteger (timeout)) {
