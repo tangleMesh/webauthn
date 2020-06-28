@@ -60,7 +60,10 @@ exports.generateRegistrationChallenge = ({ relyingParty, user, authenticator = '
         throw new Error('The user should have an id (string) and a name (string)');
     }
 
-    if (!(['cross-platform', 'platform'].includes(authenticator))) {
+    if (!authenticator) {
+        authenticator = undefined;
+    }
+    if (!(['cross-platform', 'platform', undefined].includes(authenticator))) {
         authenticator = 'platform';
     }
 
